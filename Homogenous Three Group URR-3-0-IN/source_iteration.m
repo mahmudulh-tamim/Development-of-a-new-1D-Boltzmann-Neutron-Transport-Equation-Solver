@@ -1,0 +1,94 @@
+function flux_new_ith_group=source_iteration(flux_old,k_old,group_i)
+
+tol=10^(-10);
+
+%% group data
+sigma_t=zeros(3,1);
+sigma_f=zeros(3,1);
+chi=zeros(3,1);
+nu=zeros(3,1);
+
+sigma_s=zeros(3,3);
+
+%group 1
+
+sigma_t(1,1)=0.24;
+sigma_f(1,1)=0.006;
+chi(1,1)=0.96;
+nu(1,1)=3;
+sigma_s(1,1:3)=[0.024, 0.0, 0.0];
+
+%group 2
+
+sigma_t(2,1)=0.975;
+sigma_f(2,1)=0.06;
+chi(2,1)=0.04;
+nu(2,1)=2.5;
+sigma_s(2,1:3)=[0.171, 0.6, 0.0];
+
+%group 3
+
+sigma_t(3,1)=3.1;
+sigma_f(3,1)=0.9;
+chi(3,1)=0.0;
+nu(3,1)=2;
+sigma_s(3,1:3)=[0.033, 0.275, 2.0];
+
+%% end of group data
+
+%% geometry data
+%spatial discretization
+
+slab_length=2;
+mesh_number=100;
+del_x=2/mesh_number;
+x=(0:del_x:2)';
+edge_count=length(x);
+mesh_count=edge_count-1; % it should be equal to mesh_number
+
+mesh_length=zeros(mesh_count,1);
+mesh_length(1:end,1)=del_x;
+
+%% angular discretization
+
+%polar discretization
+
+mu=[0.932954;0.537707;0.166648;-0.166648;-0.537707;-0.932954];
+w=[0.670148;0.283619;0.046233;0.046233;0.283619;0.670148];
+polar_discretization_number=size(mu,1);
+
+%azimuthal discretization
+N_a=128;
+del_theta=2*pi/N_a;
+theta=(0:del_theta:2*pi)';
+azimuthal_direction_theta= 0.5*(theta(1:end-1,1)+theta(2:end,1));
+azimuthal_discretization_number=size(azimuthal_direction_theta,1);
+
+%% end of geometry data
+
+flux_new=flux_old;
+
+fission_term=chi(group_i,1)*(nu.*sigma_f)'.*flux_old/(4*pi*k_old);
+real_fission_term=sum(fission_term,2);
+
+scattering_term=sigma_s(group_i,:).*flux_old/(4*pi);
+real_scattering_term=sum(scattering_term,2);
+
+
+S=real_fission_term+real_scattering_term;
+flux_new(:,group_i)=transport_sweep(S,group_i);
+
+iteration=1;
+
+while(max(abs(flux_new(:,group_i)-flux_old(:,group_i)))>tol)
+
+    flux_old(:,group_i)=flux_new(:,group_i);
+    scattering_term=sigma_s(group_i,:).*flux_old/(4*pi);
+    real_scattering_term=sum(scattering_term,2);
+    S=real_fission_term+real_scattering_term;
+    flux_new(:,group_i)=transport_sweep(S,group_i);
+    iteration=1+iteration;
+end
+iteration
+flux_new_ith_group=flux_new(:,group_i);
+
