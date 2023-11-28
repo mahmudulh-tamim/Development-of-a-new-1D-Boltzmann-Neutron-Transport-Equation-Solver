@@ -131,3 +131,6 @@ flux_new_iteration(:,2)./flux_new_iteration(:,1)
 
 flux_new_iteration(:,3)./flux_new_iteration(:,1)
 flux_new_iteration(:,3)./flux_new_iteration(:,2)
+flux_new_iteration(:,5)./flux_new_iteration(:,6)
+flux_new_iteration(:,4)./flux_new_iteration(:,6)
+flux_new_iteration(:,4)./flux_new_iteration(:,5)
